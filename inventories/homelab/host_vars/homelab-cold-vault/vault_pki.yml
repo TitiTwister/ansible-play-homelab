@@ -1,0 +1,9 @@
+---
+# EXAMPLE SECRET VALUES — replace with real ones, then encrypt:
+#   ansible-vault encrypt inventories/homelab/host_vars/homelab-cold-vault/vault_pki.yml
+#
+# The root CA password should live only on offline media (and in your
+# password manager), never on the online CA server.
+
+vault_step_ca_root_password: "changeme"
+vault_step_ca_intermediate_password: "changeme"

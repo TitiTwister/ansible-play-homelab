@@ -1,0 +1,55 @@
+---
+# Forgejo git service on the homelab k8s cluster.
+
+k8s_forgejo_enabled: true
+
+k8s_forgejo_admin_username: "forgejo-admin"
+
+k8s_forgejo_hostname: "git.homelab.example.com"
+
+# Git over SSH is exposed through the HAProxy TCP frontend on port 2222
+# (see homelab_haproxy/vars_haproxy.yml); clone URLs advertise
+# ssh://git@git.homelab.example.com:2222/owner/repo.git.
+k8s_forgejo_ssh_port: 2222
+
+# MetalLB IP shared by the web (80) and SSH (22) LoadBalancer services
+k8s_forgejo_loadbalancer_ip: "192.168.1.230"
+
+k8s_forgejo_persistence_size: "20Gi"
+
+# External Patroni cluster via the HAProxy write endpoint (TLS).
+k8s_forgejo_db_host: "postgre-write.homelab.example.com"
+k8s_forgejo_db_ca_files:
+  - "{{ inventory_dir | dirname }}/files/step_ca/root_ca.crt"
+  - "{{ inventory_dir | dirname }}/files/step_ca/intermediate_ca.crt"
+
+# Secrets: fill in group_vars/homelab/vault_forgejo.yml and encrypt it.
+k8s_forgejo_db_password: "{{ vault_forgejo_db_password | default('') }}"
+k8s_forgejo_admin_password: "{{ vault_forgejo_admin_password | default('') }}"
+k8s_forgejo_runner_secret: "{{ vault_forgejo_runner_secret | default('') }}"
+
+# Forgejo Actions runner.
+k8s_forgejo_runner_enabled: true
+k8s_forgejo_runner_name: "homelab-runner"
+
+# Encrypted dump backups to an S3-compatible bucket (the same bucket as
+# the pgBackRest repository; see homelab_postgresql/vault_backup.yml).
+k8s_forgejo_backup_enabled: true
+k8s_forgejo_backup_s3_bucket: "homelab-bck"
+k8s_forgejo_backup_s3_endpoint: "s3.example.com"
+k8s_forgejo_backup_s3_region: "us-example-1"
+k8s_forgejo_backup_retention: 14
+
+# Backup job metrics are pushed to every pushgateway on the Prometheus
+# hosts (scraped by Prometheus as job pushgateway; see
+# homelab_prom/vars_scrape.yml).
+k8s_forgejo_backup_pushgateway_urls: >-
+  {{
+    groups['homelab_prom'] | map('extract', hostvars) | map(attribute='ansible_host')
+    | map('regex_replace', '^', 'http://') | map('regex_replace', '$', ':9091')
+  }}
+
+# Secrets: fill in group_vars/homelab_k8s/vault_backup.yml.
+k8s_forgejo_backup_s3_key: "{{ vault_k8s_forgejo_backup_s3_key | default('') }}"
+k8s_forgejo_backup_s3_key_secret: "{{ vault_k8s_forgejo_backup_s3_key_secret | default('') }}"
+k8s_forgejo_backup_cipher_pass: "{{ vault_k8s_forgejo_backup_cipher_pass | default('') }}"

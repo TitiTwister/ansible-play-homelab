@@ -1,0 +1,20 @@
+---
+# DMZ hosts with public addresses (RFC 5737 documentation range).
+# They are not part of the homelab site group: plays target them
+# individually.
+homelab_dmz:
+  hosts:
+    homelab-ovpn:
+      ansible_host: 203.0.113.10
+      # Private interface: node_exporter scraping and Loki pushing use it,
+      # never the public address.
+      private_ip: 192.168.1.254
+
+    homelab-wireguard-1:
+      ansible_host: 203.0.113.20
+
+    homelab-cold-vault:
+      ansible_host: 203.0.113.30
+      # Private interface used by the OpenVPN server to fetch PKI material
+      # (see host_vars/homelab-ovpn/vars_pki.yml).
+      private_ip: 192.168.1.253

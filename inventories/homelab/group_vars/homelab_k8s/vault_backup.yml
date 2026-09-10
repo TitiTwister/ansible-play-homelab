@@ -1,0 +1,10 @@
+---
+# EXAMPLE SECRET VALUES — replace with real ones, then encrypt:
+#   ansible-vault encrypt inventories/homelab/group_vars/homelab_k8s/vault_backup.yml
+#
+# S3 credentials and the backup encryption passphrase for the Forgejo
+# dump backups described in vars_forgejo.yml.
+
+vault_k8s_forgejo_backup_s3_key: "EXAMPLE_S3_ACCESS_KEY"
+vault_k8s_forgejo_backup_s3_key_secret: "EXAMPLE_S3_SECRET_KEY"
+vault_k8s_forgejo_backup_cipher_pass: "changeme"

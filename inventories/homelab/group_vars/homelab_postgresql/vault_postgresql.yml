@@ -1,0 +1,8 @@
+---
+# EXAMPLE SECRET VALUES — replace with real ones, then encrypt:
+#   ansible-vault encrypt inventories/homelab/group_vars/homelab_postgresql/vault_postgresql.yml
+#
+# Generate with: openssl rand -base64 24
+
+vault_postgresql_superuser_password: "changeme"
+vault_postgresql_monitoring_password: "changeme"

@@ -1,0 +1,5 @@
+---
+# EXAMPLE SECRET VALUE — replace with a real one, then encrypt:
+#   ansible-vault encrypt inventories/homelab/group_vars/all/vault_haproxy.yml
+
+vault_haproxy_stats_password: "changeme"

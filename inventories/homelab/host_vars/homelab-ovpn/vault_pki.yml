@@ -1,0 +1,8 @@
+---
+# EXAMPLE SECRET VALUE — replace with a real one, then encrypt:
+#   ansible-vault encrypt inventories/homelab/host_vars/homelab-ovpn/vault_pki.yml
+#
+# Same value as homelab_ca/vault_pki.yml: the OpenVPN server decrypts the
+# intermediate CA material fetched from the cold vault.
+
+vault_step_ca_intermediate_password: "changeme"

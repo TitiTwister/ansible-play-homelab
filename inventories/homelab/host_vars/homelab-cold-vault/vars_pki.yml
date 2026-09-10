@@ -1,0 +1,30 @@
+---
+# Offline PKI host configuration (cold vault)
+
+# CA secrets (vault_pki.yml)
+step_ca_root_password: "{{ vault_step_ca_root_password }}"
+step_ca_intermediate_password: "{{ vault_step_ca_intermediate_password }}"
+
+# OpenVPN server IPs
+step_ca_openvpn_server_public_ip: "203.0.113.10"
+step_ca_openvpn_server_private_ip: "192.168.1.254"
+step_ca_openvpn_server_cn: "homelab-ovpn"
+
+# OpenVPN clients
+step_ca_openvpn_clients:
+  - example-laptop
+  - example-phone
+
+# Installation paths
+step_ca_install_path: "/srv/cold-vault/"
+
+# Controller directory where the CA material is fetched (consumed by the
+# online CA server; collection ships no default path)
+step_ca_controller_files_dir: "{{ inventory_dir | dirname }}/files/step_ca"
+
+# Enable cold vault PKI setup
+step_ca_pki_mode: true
+
+# step_ca role overrides
+step_ca_root_ca_name: "Homelab Example Root CA"
+step_ca_intermediate_ca_name: "Homelab Example Intermediate CA"

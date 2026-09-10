@@ -1,0 +1,21 @@
+---
+# Firewall rules for the DMZ hosts (OpenVPN gateway)
+
+firewall_rules:
+  - service: ssh
+    zone: public
+  - service: node-exporter
+    zone: public
+    state: enabled
+    short: Node Exporter
+    description: Prometheus Node Exporter
+    port: 9100/tcp
+  - port: "1194/tcp"
+    zone: public
+  - source: "10.8.0.0/24"
+    zone: public
+  - masquerade: true
+    zone: public
+
+# Enable IP forwarding for VPN routing
+firewall_ip_forward: true

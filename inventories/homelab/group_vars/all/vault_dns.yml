@@ -1,0 +1,6 @@
+---
+# EXAMPLE SECRET VALUE — replace with a real one, then encrypt:
+#   ansible-vault encrypt inventories/homelab/group_vars/all/vault_dns.yml
+#
+# Generate with: dd if=/dev/urandom bs=32 count=1 | base64
+vault_bind_tsig_key_secret: "RXhhbXBsZVRTSUdTZWNyZXRSZXBsYWNlTWUwMDAwMDA="

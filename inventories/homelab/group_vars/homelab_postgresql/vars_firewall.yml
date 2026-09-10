@@ -1,0 +1,52 @@
+---
+# Firewall rules for the PostgreSQL cluster
+
+firewall_rules:
+  - service: ssh
+    zone: public
+  - service: node-exporter
+    zone: public
+    state: enabled
+    short: Node Exporter
+    description: Prometheus Node Exporter
+    port: 9100/tcp
+
+  - service: postgresql
+    zone: public
+    state: enabled
+    short: PostgreSQL
+    description: PostgreSQL database server
+    port: 5432/tcp
+
+  # Patroni REST API: leader election health checks (HAProxy) and
+  # Prometheus scraping
+  - service: patroni-rest
+    zone: public
+    state: enabled
+    short: Patroni REST API
+    description: Patroni cluster REST API
+    port: 8008/tcp
+
+  # etcd client port used by the Patroni DCS
+  - service: etcd-client
+    zone: public
+    state: enabled
+    short: etcd client
+    description: etcd server client API
+    port: 2379/tcp
+
+  # etcd peer port for the Patroni DCS cluster
+  - service: etcd-peer
+    zone: public
+    state: enabled
+    short: etcd peer
+    description: etcd server peer API
+    port: 2380/tcp
+
+  # etcd metrics listener, scraped by Prometheus
+  - service: etcd-metrics
+    zone: public
+    state: enabled
+    short: etcd Metrics
+    description: etcd metrics listener
+    port: 2381/tcp

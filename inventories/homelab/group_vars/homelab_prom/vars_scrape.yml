@@ -1,0 +1,244 @@
+---
+# Prometheus scrape configuration: node/postgres exporters (file_sd) plus
+# patroni, haproxy, etcd and Kubernetes static/sd jobs.
+# Uses hostname@ip format so Prometheus can display the hostname as the
+# instance label.
+
+# Kubernetes scrape credentials (cluster CA + monitoring ServiceAccount
+# token), fetched by the k8s role to files/k8s/monitoring/ and deployed
+# by the prometheus role as /etc/prometheus/k8s/.
+prometheus_k8s_credentials_src: "{{ inventory_dir | dirname }}/files/k8s/monitoring"
+
+prometheus_targets_node:
+  node:
+    - targets: >
+        {{
+          groups['homelab'] | map('extract', hostvars) | map(attribute='inventory_hostname')
+          | zip(groups['homelab'] | map('extract', hostvars) | map(attribute='ansible_host'))
+          | map('join', '@')
+        }}
+    # DMZ OpenVPN gateway, scraped via its private interface (see
+    # homelab_dmz.yml private_ip); the public address is never scraped.
+    - targets:
+        - "homelab-ovpn@{{ hostvars['homelab-ovpn'].private_ip }}"
+
+prometheus_targets_postgres:
+  postgres:
+    - targets: >
+        {{
+          groups['homelab_postgresql'] | map('extract', hostvars) | map(attribute='inventory_hostname')
+          | zip(groups['homelab_postgresql'] | map('extract', hostvars) | map(attribute='ansible_host'))
+          | map('join', '@')
+        }}
+
+prometheus_scrape_configs:
+  - job_name: "node"
+    file_sd_configs:
+      - files:
+          - "{{ prometheus_config_dir }}/file_sd/node.yml"
+    relabel_configs:
+      - source_labels: [__address__]
+        regex: '(.*)@.*'
+        target_label: instance
+        replacement: '${1}'
+      - source_labels: [__address__]
+        regex: '.*@(.*)'
+        target_label: __address__
+        replacement: '${1}'
+
+  - job_name: "postgres"
+    file_sd_configs:
+      - files:
+          - "{{ prometheus_config_dir }}/file_sd/postgres.yml"
+    relabel_configs:
+      - source_labels: [__address__]
+        regex: '(.*)@.*'
+        target_label: instance
+        replacement: '${1}'
+      - source_labels: [__address__]
+        regex: '.*@(.*)'
+        target_label: __address__
+        replacement: '${1}'
+
+  - job_name: "patroni"
+    static_configs:
+      - targets: >
+          {{
+            groups['homelab_postgresql'] | map('extract', hostvars) | map(attribute='inventory_hostname')
+            | zip(groups['homelab_postgresql'] | map('extract', hostvars) | map(attribute='ansible_host'))
+            | map('join', '@') | map('regex_replace', '$', ':8008')
+          }}
+    relabel_configs:
+      - source_labels: [__address__]
+        regex: '(.*)@.*'
+        target_label: instance
+        replacement: '${1}'
+      - source_labels: [__address__]
+        regex: '.*@(.*)'
+        target_label: __address__
+        replacement: '${1}'
+
+  - job_name: "haproxy"
+    metrics_path: /metrics
+    basic_auth:
+      username: "{{ haproxy_stats_user }}"
+      password: "{{ haproxy_stats_password }}"
+    static_configs:
+      - targets: >
+          {{
+            groups['homelab_haproxy'] | map('extract', hostvars) | map(attribute='inventory_hostname')
+            | zip(groups['homelab_haproxy'] | map('extract', hostvars) | map(attribute='ansible_host'))
+            | map('join', '@') | map('regex_replace', '$', ':8404')
+          }}
+    relabel_configs:
+      - source_labels: [__address__]
+        regex: '(.*)@.*'
+        target_label: instance
+        replacement: '${1}'
+      - source_labels: [__address__]
+        regex: '.*@(.*)'
+        target_label: __address__
+        replacement: '${1}'
+
+  - job_name: "etcd-pg"
+    static_configs:
+      - targets: >
+          {{
+            groups['homelab_postgresql'] | map('extract', hostvars) | map(attribute='inventory_hostname')
+            | zip(groups['homelab_postgresql'] | map('extract', hostvars) | map(attribute='ansible_host'))
+            | map('join', '@') | map('regex_replace', '$', ':2381')
+          }}
+    relabel_configs:
+      - source_labels: [__address__]
+        regex: '(.*)@.*'
+        target_label: instance
+        replacement: '${1}'
+      - source_labels: [__address__]
+        regex: '.*@(.*)'
+        target_label: __address__
+        replacement: '${1}'
+
+  - job_name: "etcd-k8s"
+    static_configs:
+      - targets: >
+          {{
+            groups['homelab_k8s_masters'] | map('extract', hostvars) | map(attribute='inventory_hostname')
+            | zip(groups['homelab_k8s_masters'] | map('extract', hostvars) | map(attribute='ansible_host'))
+            | map('join', '@') | map('regex_replace', '$', ':2381')
+          }}
+    relabel_configs:
+      - source_labels: [__address__]
+        regex: '(.*)@.*'
+        target_label: instance
+        replacement: '${1}'
+      - source_labels: [__address__]
+        regex: '.*@(.*)'
+        target_label: __address__
+        replacement: '${1}'
+
+  # Batch job metrics (backups). Each Prometheus scrapes only its local
+  # pushgateway (1:1 pairing) to avoid duplicate series; pushed labels win.
+  - job_name: "pushgateway"
+    honor_labels: true
+    static_configs:
+      - targets:
+          - "{{ ansible_host }}:9091"
+
+  # Kubernetes API servers on the masters, authenticated with the
+  # monitoring ServiceAccount; the cluster CA verifies the apiserver
+  # certificates (node IPs are in their SANs).
+  - job_name: "kubernetes-apiservers"
+    scheme: https
+    tls_config:
+      ca_file: /etc/prometheus/k8s/ca.crt
+    bearer_token_file: /etc/prometheus/k8s/token
+    static_configs:
+      - targets: >
+          {{
+            groups['homelab_k8s_masters'] | map('extract', hostvars) | map(attribute='inventory_hostname')
+            | zip(groups['homelab_k8s_masters'] | map('extract', hostvars) | map(attribute='ansible_host'))
+            | map('join', '@') | map('regex_replace', '$', ':6443')
+          }}
+    relabel_configs:
+      - source_labels: [__address__]
+        regex: '(.*)@.*'
+        target_label: instance
+        replacement: '${1}'
+      - source_labels: [__address__]
+        regex: '.*@(.*)'
+        target_label: __address__
+        replacement: '${1}'
+
+  # kubelet metrics on every node via Kubernetes service discovery. The
+  # SD api_server points at the first master; discovered targets keep
+  # being scraped if that master fails. kubelet serving certificates are
+  # self-signed (kubeadm default): TLS is not verified, the bearer token
+  # still authenticates.
+  - job_name: "kubernetes-kubelets"
+    scheme: https
+    tls_config:
+      insecure_skip_verify: true
+    bearer_token_file: /etc/prometheus/k8s/token
+    kubernetes_sd_configs:
+      - role: node
+        api_server: "https://{{ hostvars[groups['homelab_k8s_masters'] | first].ansible_host }}:6443"
+        tls_config:
+          ca_file: /etc/prometheus/k8s/ca.crt
+        bearer_token_file: /etc/prometheus/k8s/token
+    relabel_configs:
+      - source_labels: [__meta_kubernetes_node_address_InternalIP]
+        target_label: __address__
+        replacement: '${1}:10250'
+      - source_labels: [__meta_kubernetes_node_name]
+        target_label: instance
+      - action: labelmap
+        regex: __meta_kubernetes_node_label_(.+)
+
+  # cAdvisor (container metrics) on every node, same discovery as kubelets.
+  - job_name: "kubernetes-cadvisor"
+    scheme: https
+    tls_config:
+      insecure_skip_verify: true
+    bearer_token_file: /etc/prometheus/k8s/token
+    metrics_path: /metrics/cadvisor
+    kubernetes_sd_configs:
+      - role: node
+        api_server: "https://{{ hostvars[groups['homelab_k8s_masters'] | first].ansible_host }}:6443"
+        tls_config:
+          ca_file: /etc/prometheus/k8s/ca.crt
+        bearer_token_file: /etc/prometheus/k8s/token
+    relabel_configs:
+      - source_labels: [__meta_kubernetes_node_address_InternalIP]
+        target_label: __address__
+        replacement: '${1}:10250'
+      - source_labels: [__meta_kubernetes_node_name]
+        target_label: instance
+      - action: labelmap
+        regex: __meta_kubernetes_node_label_(.+)
+
+  # Cluster state metrics, reached through the API server service proxy on
+  # the first master (RBAC services/proxy; no direct node path needed).
+  # Single logical target: kube-proxy routes to the one kube-state-metrics
+  # replica, so scraping per-node NodePorts would duplicate every series.
+  - job_name: "kube-state-metrics"
+    scheme: https
+    tls_config:
+      ca_file: /etc/prometheus/k8s/ca.crt
+    bearer_token_file: /etc/prometheus/k8s/token
+    metrics_path: "/api/v1/namespaces/kube-system/services/http:kube-state-metrics:8080/proxy/metrics"
+    static_configs:
+      - targets:
+          - "{{ hostvars[groups['homelab_k8s_masters'] | first].ansible_host }}:6443"
+
+  # Longhorn managers: reached through the API server service proxy on the
+  # first master (the longhorn-backend service; manager pods are not
+  # hostNetwork so port 9500 does not listen on the nodes).
+  - job_name: "longhorn"
+    scheme: https
+    tls_config:
+      ca_file: /etc/prometheus/k8s/ca.crt
+    bearer_token_file: /etc/prometheus/k8s/token
+    metrics_path: "/api/v1/namespaces/longhorn-system/services/http:longhorn-backend:9500/proxy/metrics"
+    static_configs:
+      - targets:
+          - "{{ hostvars[groups['homelab_k8s_masters'] | first].ansible_host }}:6443"

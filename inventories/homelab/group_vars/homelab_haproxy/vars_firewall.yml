@@ -1,0 +1,61 @@
+---
+# Firewall rules for the HAProxy load balancer
+
+firewall_rules:
+  - service: ssh
+    zone: public
+  - service: node-exporter
+    zone: public
+    state: enabled
+    short: Node Exporter
+    description: Prometheus Node Exporter
+    port: 9100/tcp
+
+  - service: http
+    zone: public
+    state: enabled
+    short: HTTP
+    description: HTTP traffic for monitoring services (redirects to HTTPS)
+    port: 80/tcp
+
+  - service: https
+    zone: public
+    state: enabled
+    short: HTTPS
+    description: HTTPS traffic for monitoring services
+    port: 443/tcp
+
+  - service: haproxy-stats
+    zone: public
+    state: enabled
+    short: HAProxy Stats
+    description: HAProxy statistics page
+    port: 8404/tcp
+
+  - service: k8s-api
+    zone: public
+    state: enabled
+    short: Kubernetes API
+    description: Kubernetes API Server
+    port: 6443/tcp
+
+  - service: postgresql-write
+    zone: public
+    state: enabled
+    short: PostgreSQL Write
+    description: PostgreSQL write endpoint via HAProxy
+    port: 5432/tcp
+
+  - service: postgresql-read
+    zone: public
+    state: enabled
+    short: PostgreSQL Read
+    description: PostgreSQL read endpoint via HAProxy
+    port: 5433/tcp
+
+  - service: forgejo-ssh
+    zone: public
+    state: enabled
+    short: Forgejo SSH
+    description: Git over SSH via HAProxy TCP frontend
+    port: 2222/tcp

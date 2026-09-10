@@ -1,0 +1,7 @@
+---
+homelab_prom:
+  hosts:
+    homelab-prom-1:
+      ansible_host: 192.168.1.20
+    homelab-prom-2:
+      ansible_host: 192.168.1.21

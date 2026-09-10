@@ -1,0 +1,19 @@
+---
+# Firewall rules for the Grafana server
+
+firewall_rules:
+  - service: ssh
+    zone: public
+  - service: node-exporter
+    zone: public
+    state: enabled
+    short: Node Exporter
+    description: Prometheus Node Exporter
+    port: 9100/tcp
+
+  - service: grafana
+    zone: public
+    state: enabled
+    short: Grafana
+    description: Grafana web interface
+    port: 3000/tcp

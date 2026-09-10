@@ -1,0 +1,12 @@
+---
+# Grafana configuration for the homelab_grafana group
+
+# Inventory group backing the Prometheus datasources (the collection
+# default is prometheus)
+grafana_prometheus_group: homelab_prom
+
+# Controller-side dashboards shipped in this repository
+grafana_dashboards_src: "{{ inventory_dir | dirname }}/files/grafana/dashboards"
+
+# From vault_grafana.yml
+grafana_admin_password: "{{ vault_grafana_admin_password }}"

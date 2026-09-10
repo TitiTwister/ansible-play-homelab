@@ -1,0 +1,16 @@
+---
+# Firewall rules for the BIND name servers
+
+firewall_rules:
+  - service: ssh
+    zone: public
+  - service: node-exporter
+    zone: public
+    state: enabled
+    short: Node Exporter
+    description: Prometheus Node Exporter
+    port: 9100/tcp
+  - port: 53/tcp
+    zone: public
+  - port: 53/udp
+    zone: public

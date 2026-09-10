@@ -1,0 +1,5 @@
+---
+# EXAMPLE SECRET VALUE — replace with a real one, then encrypt:
+#   ansible-vault encrypt inventories/homelab/group_vars/homelab_grafana/vault_grafana.yml
+
+vault_grafana_admin_password: "changeme"

@@ -1,0 +1,61 @@
+---
+# PostgreSQL HA cluster variables for the homelab example site
+
+# Cluster identity
+postgresql_cluster_name: "homelab-postgresql"
+postgresql_group: "homelab_postgresql"
+
+# Connection settings
+postgresql_listen_addresses: "0.0.0.0"
+postgresql_port: 5432
+postgresql_patroni_rest_api_port: 8008
+
+# DCS settings
+postgresql_patroni_ttl: 30
+postgresql_patroni_loop_wait: 10
+postgresql_patroni_retry_timeout: 10
+
+# Forgejo application database and user, backing the Forgejo instance
+# deployed by the k8s role. They are managed only once the
+# vault_forgejo_db_password vault value
+# (group_vars/homelab/vault_forgejo.yml) has been filled in.
+forgejo_db_ready: >-
+  {{ vault_forgejo_db_password | default('') | length > 0
+     and not (vault_forgejo_db_password | default('')) is match('^CHANGE_ME') }}
+
+postgresql_users: >-
+  {{ [{'name': 'forgejo', 'password': vault_forgejo_db_password | default('')}]
+     if forgejo_db_ready | bool else [] }}
+
+postgresql_databases: >-
+  {{ [{'name': 'forgejo', 'owner': 'forgejo'}]
+     if forgejo_db_ready | bool else [] }}
+
+# Superuser credentials (vault_postgresql.yml)
+postgresql_superuser_username: postgres
+postgresql_superuser_password: "{{ vault_postgresql_superuser_password }}"
+
+# Monitoring user for postgres_exporter (password from vault_postgresql.yml)
+postgresql_monitoring_user:
+  name: postgres_exporter
+  password: "{{ vault_postgresql_monitoring_password }}"
+
+# Connection string consumed by the postgres_exporter role
+postgres_exporter_credentials: "{{ postgresql_monitoring_user.name }}:{{ postgresql_monitoring_user.password }}"
+postgres_exporter_data_source_name: "postgresql://{{ postgresql_exporter_credentials }}@localhost:{{ postgresql_port }}/postgres?sslmode=disable"
+
+# TLS configuration
+postgresql_tls_enabled: true
+
+# Root CA installed by the certificate role (collection default is
+# root_ca.crt) and non-TLS pg_hba network (collection default 10.0.0.0/8)
+postgresql_tls_ca_src: "/etc/ssl/certs/homelab-ca-root.crt"
+postgresql_hba_network: "192.168.1.0/24"
+
+certificate_certs:
+  - name: postgresql
+    common_name: "{{ inventory_hostname }}.homelab.example.com"
+    san:
+      - "postgre-write.homelab.example.com"
+      - "postgre-read.homelab.example.com"
+    duration: "8760h"

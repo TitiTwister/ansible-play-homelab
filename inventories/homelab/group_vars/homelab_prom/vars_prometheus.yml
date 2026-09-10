@@ -1,0 +1,10 @@
+---
+# Prometheus and Alertmanager configuration for the homelab_prom group
+
+# Inventory group of the Prometheus/Alertmanager peers (the collection
+# default is prometheus)
+prometheus_group: homelab_prom
+
+# Telegram alerting credentials (vault_telegram.yml)
+telegram_bot_token: "{{ vault_telegram_bot_token }}"
+telegram_chat_id: "{{ vault_telegram_chat_id }}"

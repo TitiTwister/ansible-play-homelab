@@ -1,0 +1,9 @@
+---
+# EXAMPLE SECRET VALUES — replace with real ones, then encrypt:
+#   ansible-vault encrypt inventories/homelab/group_vars/homelab_prom/vault_telegram.yml
+#
+# Create a bot with @BotFather and get your chat id by messaging the bot
+# and reading https://api.telegram.org/bot<token>/getUpdates
+
+vault_telegram_bot_token: "123456789:AAAAExampleTokenReplaceMe000000"
+vault_telegram_chat_id: 123456789

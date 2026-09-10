@@ -1,0 +1,17 @@
+---
+homelab:
+  children:
+    homelab_dns:
+    homelab_ca:
+    homelab_prom:
+    homelab_grafana:
+    homelab_haproxy:
+    homelab_k8s:
+    homelab_postgresql:
+    homelab_loki:
+
+homelab_k8s:
+  children:
+    homelab_k8s_masters:
+    homelab_k8s_workers:
+    homelab_k8s_controllers:

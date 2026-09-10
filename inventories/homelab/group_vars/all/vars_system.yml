@@ -1,0 +1,32 @@
+---
+# Base configuration for every host of the homelab site
+
+ansible_user: admin
+ansible_python_interpreter: /usr/bin/python3.12
+
+# DNS resolvers applied by the common role via NetworkManager
+dns_nameservers:
+  - 192.168.1.10
+  - 192.168.1.11
+dns_search_domain: "homelab.example.com"
+
+# TSIG key used by the BIND servers (zone updates) and by the certificate
+# role (certbot DNS-01 challenges via RFC 2136). The secret is an example
+# value — see vault_dns.yml.
+bind_tsig_key_name: "certbot-updates"
+bind_tsig_key_algorithm: "hmac-sha256"
+bind_tsig_key_secret: "{{ vault_bind_tsig_key_secret }}"
+
+# Online CA server endpoint (used by all hosts)
+step_ca_server_ca_url: "homelab-ca-1.homelab.example.com"
+step_ca_server_port: 443
+
+# Root CA filename installed by the certificate role (collection default
+# is root_ca.crt)
+certificate_root_ca_file: "homelab-ca-root.crt"
+
+# Optional data disk configuration (managed by the common role)
+# disks:
+#   - device: /dev/sdb
+#     mount_point: /data
+#     mount_options: defaults

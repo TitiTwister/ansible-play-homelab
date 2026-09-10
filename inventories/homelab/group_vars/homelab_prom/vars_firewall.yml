@@ -1,0 +1,42 @@
+---
+# Firewall rules for the Prometheus/Alertmanager servers
+
+firewall_rules:
+  - service: ssh
+    zone: public
+  - service: node-exporter
+    zone: public
+    state: enabled
+    short: Node Exporter
+    description: Prometheus Node Exporter
+    port: 9100/tcp
+
+  - service: prometheus
+    zone: public
+    state: enabled
+    short: Prometheus
+    description: Prometheus service
+    port: 9090/tcp
+
+  - service: alertmanager
+    zone: public
+    state: enabled
+    short: Alertmanager
+    description: Alertmanager service
+    port: 9093/tcp
+
+  - service: alertmanager-cluster
+    zone: public
+    state: enabled
+    short: Alertmanager Cluster
+    description: Alertmanager HA gossip cluster
+    port: 9094/tcp
+
+  # Metrics cache for batch jobs (pgBackRest, Forgejo backup); pushed to
+  # from the PostgreSQL and k8s subnets, scraped by the local Prometheus.
+  - service: pushgateway
+    zone: public
+    state: enabled
+    short: Pushgateway
+    description: Prometheus Pushgateway for batch job metrics
+    port: 9091/tcp

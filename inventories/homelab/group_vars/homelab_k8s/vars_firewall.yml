@@ -1,0 +1,158 @@
+---
+# Firewall rules for Kubernetes nodes (masters and workers)
+
+firewall_rules:
+  - service: ssh
+    zone: public
+    state: enabled
+
+  # Prometheus Node Exporter
+  - service: node-exporter
+    zone: public
+    state: enabled
+    short: Node Exporter
+    description: Prometheus Node Exporter
+    port: 9100/tcp
+
+  # Kubernetes API server (masters only; harmless on workers)
+  - service: k8s-api
+    zone: public
+    state: enabled
+    short: Kubernetes API
+    description: Kubernetes API Server
+    port: 6443/tcp
+
+  # etcd server client API (masters only)
+  - service: etcd-client
+    zone: public
+    state: enabled
+    short: etcd client
+    description: etcd server client API
+    port: 2379/tcp
+
+  # etcd peer API (masters only)
+  - service: etcd-peer
+    zone: public
+    state: enabled
+    short: etcd peer
+    description: etcd server peer API
+    port: 2380/tcp
+
+  # etcd metrics listener, scraped by Prometheus (masters only; harmless on workers)
+  - service: etcd-metrics
+    zone: public
+    state: enabled
+    short: etcd Metrics
+    description: etcd metrics listener
+    port: 2381/tcp
+
+  # Kubelet
+  - service: kubelet
+    zone: public
+    state: enabled
+    short: Kubelet
+    description: Kubernetes Kubelet
+    port: 10250/tcp
+
+  # NodePort services
+  - service: nodeport
+    zone: public
+    state: enabled
+    short: NodePort Services
+    description: Kubernetes NodePort service range
+    port: 30000-32767/tcp
+
+  # BGP for Calico/MetalLB (if needed)
+  - service: bgp
+    zone: public
+    state: enabled
+    short: BGP
+    description: BGP routing protocol
+    port: 179/tcp
+
+  # Cilium VXLAN overlay between nodes
+  - service: cilium-vxlan
+    zone: public
+    state: enabled
+    short: Cilium VXLAN
+    description: Cilium VXLAN overlay traffic between nodes
+    port: 8472/udp
+
+  # Cilium health probe between nodes
+  - service: cilium-health
+    zone: public
+    state: enabled
+    short: Cilium Health
+    description: Cilium health probe between nodes
+    port: 4240/tcp
+
+  # Cilium Hubble server (pods reach local agent on host network)
+  - service: cilium-hubble
+    zone: public
+    state: enabled
+    short: Cilium Hubble
+    description: Cilium Hubble server for flow visibility
+    port: 4244/tcp
+
+  # HTTP for LoadBalancer services fronted by HAProxy
+  - service: k8s-http
+    zone: public
+    state: enabled
+    short: Kubernetes HTTP
+    description: HTTP for Kubernetes LoadBalancer services
+    port: 80/tcp
+
+  # MetalLB speaker memberlist
+  - service: metallb-memberlist-tcp
+    zone: public
+    state: enabled
+    short: MetalLB Memberlist TCP
+    description: MetalLB speaker memberlist TCP
+    port: 7946/tcp
+
+  - service: metallb-memberlist-udp
+    zone: public
+    state: enabled
+    short: MetalLB Memberlist UDP
+    description: MetalLB speaker memberlist UDP
+    port: 7946/udp
+
+  # Longhorn engine monitor
+  - service: longhorn-engine-monitor
+    zone: public
+    state: enabled
+    short: Longhorn Engine Monitor
+    description: Longhorn engine monitor port
+    port: 9500/tcp
+
+  # Longhorn engine
+  - service: longhorn-engine
+    zone: public
+    state: enabled
+    short: Longhorn Engine
+    description: Longhorn engine port
+    port: 9501/tcp
+
+  # Longhorn replica
+  - service: longhorn-replica
+    zone: public
+    state: enabled
+    short: Longhorn Replica
+    description: Longhorn replica port
+    port: 9502/tcp
+
+  # Longhorn backing image manager
+  - service: longhorn-backing-image
+    zone: public
+    state: enabled
+    short: Longhorn Backing Image
+    description: Longhorn backing image manager port
+    port: 9503/tcp
+
+  # Longhorn instance manager
+  - service: longhorn-instance-manager
+    zone: public
+    state: enabled
+    short: Longhorn Instance Manager
+    description: Longhorn instance manager port range
+    port: 8500-10000/tcp

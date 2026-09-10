@@ -1,0 +1,6 @@
+---
+# HAProxy stats page / Prometheus exporter credentials.
+# Lives in group_vars/all because two parties read it: the haproxy host
+# (stats auth in haproxy.cfg) and the Prometheus hosts (scrape basic_auth).
+haproxy_stats_user: admin
+haproxy_stats_password: "{{ vault_haproxy_stats_password }}"

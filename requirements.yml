@@ -1,0 +1,8 @@
+---
+collections:
+  - name: https://github.com/TitiTwister/ansible-homelab-collection.git
+    type: git
+    version: v1.0.0
+  - name: ansible.posix
+  - name: community.general
+  - name: community.postgresql

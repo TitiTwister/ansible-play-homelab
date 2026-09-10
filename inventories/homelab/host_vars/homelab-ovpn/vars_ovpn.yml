@@ -1,0 +1,17 @@
+---
+# OpenVPN server configuration for the homelab-ovpn DMZ gateway
+
+openvpn_protocol: tcp
+openvpn_clients:
+  - example-laptop
+  - example-phone
+
+# VPN addressing (collection defaults are 10.8.0.0/24; the DMZ firewall
+# allows that source subnet, see homelab_dmz/vars_firewall.yml)
+openvpn_subnet: "10.8.0.0"
+openvpn_netmask: "255.255.255.0"
+openvpn_cidr: "10.8.0.0/24"
+
+# OpenVPN server IPs used by client configs
+openvpn_server_public_ip: "203.0.113.10"
+openvpn_server_private_ip: "192.168.1.254"

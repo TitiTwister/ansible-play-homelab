@@ -1,0 +1,252 @@
+---
+# Playbook: site.yml
+# Purpose: full stack for the homelab example site — base configuration
+# and node_exporter everywhere, DNS, PKI, HAProxy, the monitoring stack
+# (Prometheus/Alertmanager/Pushgateway, Loki, Promtail, Grafana), a
+# PostgreSQL HA cluster and a Kubernetes cluster.
+
+##############################################################
+################  SYSTEM & NETWORK            ################
+##############################################################
+
+- name: Apply common configuration to all hosts
+  hosts:
+    - homelab
+    - homelab-ovpn
+    - homelab-wireguard-1
+  become: true
+  gather_facts: true
+  roles:
+    - role: tititwister.homelab.common
+      tags:
+        - role:common
+        - category:system
+
+    - role: tititwister.homelab.firewall
+      tags:
+        - role:firewall
+        - category:system
+
+    - role: tititwister.homelab.node_exporter
+      tags:
+        - role:node_exporter
+        - category:monitoring
+
+- name: Setup DNS servers
+  hosts: homelab_dns
+  become: true
+  gather_facts: true
+  roles:
+    - role: tititwister.homelab.bind
+      tags:
+        - role:bind
+        - category:network
+
+##############################################################
+################            PKI               ################
+##############################################################
+
+- name: Deploy online CA server
+  hosts: homelab_ca
+  become: true
+  gather_facts: true
+  roles:
+    - role: tititwister.homelab.step_ca
+      tags:
+        - role:step_ca
+        - category:pki
+
+##############################################################
+################       LOAD BALANCERS         ################
+##############################################################
+
+- name: Configure HAProxy
+  hosts: homelab_haproxy
+  become: true
+  gather_facts: true
+  roles:
+    - role: tititwister.homelab.certificate
+      tags:
+        - role:certificate
+        - category:pki
+    - role: tititwister.homelab.haproxy
+      tags:
+        - role:haproxy
+        - category:network
+
+##############################################################
+################          MONITORING          ################
+##############################################################
+
+- name: Configure Prometheus, Alertmanager and Pushgateway
+  hosts: homelab_prom
+  become: true
+  gather_facts: true
+  roles:
+    - role: tititwister.homelab.prometheus
+      tags:
+        - role:prometheus
+        - category:monitoring
+
+    - role: tititwister.homelab.pushgateway
+      tags:
+        - role:pushgateway
+        - category:monitoring
+
+##############################################################
+################  LOGGING                    ################
+##############################################################
+
+- name: Deploy Loki
+  hosts: homelab_loki
+  become: true
+  gather_facts: true
+  roles:
+    - role: tititwister.homelab.loki
+      tags:
+        - role:loki
+        - category:monitoring
+
+- name: Ship host logs to Loki
+  # homelab-ovpn pushes over its private interface; wireguard-1 is not
+  # deployed yet (add it here when it is).
+  hosts:
+    - homelab
+    - homelab-ovpn
+  become: true
+  gather_facts: true
+  roles:
+    - role: tititwister.homelab.promtail
+      tags:
+        - role:promtail
+        - category:monitoring
+
+- name: Configure Grafana
+  hosts: homelab_grafana
+  become: true
+  gather_facts: true
+  roles:
+    - role: tititwister.homelab.grafana
+      tags:
+        - role:grafana
+        - category:monitoring
+
+
+##############################################################
+################          DATABASES           ################
+##############################################################
+
+- name: Deploy PostgreSQL HA cluster
+  hosts: homelab_postgresql
+  become: true
+  gather_facts: true
+  roles:
+    - role: tititwister.homelab.certificate
+      tags:
+        - role:certificate
+        - category:pki
+    - role: tititwister.homelab.postgresql
+      tags:
+        - role:postgresql
+        - category:app
+    - role: tititwister.homelab.postgres_exporter
+      tags:
+        - role:postgres_exporter
+        - category:monitoring
+
+##############################################################
+################          KUBERNETES          ################
+##############################################################
+
+- name: Deploy Kubernetes control plane
+  hosts: homelab_k8s_masters
+  become: true
+  gather_facts: true
+  roles:
+    # Nodes pull the Forgejo backup toolchain image from the Forgejo
+    # container registry, whose certificate is signed by the internal
+    # CA: containerd needs that root in the system trust store.
+    - role: tititwister.homelab.certificate
+      tags:
+        - role:certificate
+        - category:pki
+    - role: tititwister.homelab.k8s
+      vars:
+        k8s_node_type: master
+      tags:
+        - role:k8s
+        - category:app
+  post_tasks:
+    # containerd (Go) caches the system CA pool at process start. When the
+    # certificate role updated the trust store, restart it so image pulls
+    # from the internal registry succeed. Mirrors the inline update-ca-trust
+    # pattern of the certificate role: synchronous, not a deferred handler.
+    - name: Restart containerd after CA trust update
+      ansible.builtin.systemd:
+        name: containerd
+        state: restarted
+      when: certificate_root_ca_installed.changed  # noqa: no-handler
+
+- name: Deploy Kubernetes controller
+  hosts: homelab_k8s_controllers
+  become: true
+  gather_facts: true
+  roles:
+    - role: tititwister.homelab.k8s
+      vars:
+        k8s_node_type: controller
+      tags:
+        - role:k8s
+        - category:app
+
+- name: Join Kubernetes workers
+  hosts: homelab_k8s_workers
+  become: true
+  gather_facts: true
+  roles:
+    # Same registry trust requirement as the masters.
+    - role: tititwister.homelab.certificate
+      tags:
+        - role:certificate
+        - category:pki
+    - role: tititwister.homelab.k8s
+      vars:
+        k8s_node_type: worker
+      tags:
+        - role:k8s
+        - category:app
+  post_tasks:
+    # Same containerd CA-trust reload as the masters.
+    - name: Restart containerd after CA trust update
+      ansible.builtin.systemd:
+        name: containerd
+        state: restarted
+      when: certificate_root_ca_installed.changed  # noqa: no-handler
+
+- name: Deploy Kubernetes cluster addons
+  hosts: homelab_k8s_controllers
+  become: true
+  gather_facts: true
+  roles:
+    - role: tititwister.homelab.k8s
+      vars:
+        k8s_node_type: addons
+      tags:
+        - role:k8s
+        - category:app
+
+- name: Expose Kubernetes etcd metrics for Prometheus
+  # serial: 1 — kubelet restarts the etcd static pod on manifest change;
+  # members roll one at a time so the cluster never loses quorum.
+  hosts: homelab_k8s_masters
+  serial: 1
+  become: true
+  gather_facts: false
+  roles:
+    - role: tititwister.homelab.k8s
+      vars:
+        k8s_node_type: etcd-metrics
+      tags:
+        - role:k8s
+        - category:monitoring
+        - etcd-metrics

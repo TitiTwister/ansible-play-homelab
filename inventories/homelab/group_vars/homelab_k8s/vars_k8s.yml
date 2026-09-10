@@ -1,0 +1,48 @@
+---
+# Kubernetes cluster variables for the homelab example site
+
+# Cluster identity
+k8s_cluster_name: "homelab-k8s"
+
+# Cluster networking: node network is this site's LAN; pod, service and
+# DNS subnets keep the collection defaults (10.244.0.0/16, 10.96.0.0/12,
+# 10.96.0.10 — no overlap with 192.168.1.0/24)
+k8s_node_network_cidr: "192.168.1.0/24"
+
+# Controller directory for kubeconfigs and monitoring credentials
+# (collection ships no default path)
+k8s_local_kubeconfig_dir: "{{ inventory_dir | dirname }}/files/k8s"
+
+# HA control-plane endpoint (must be configured in HAProxy + DNS)
+k8s_api_endpoint: "k8s-api.homelab.example.com"
+k8s_api_port: 6443
+
+# Bootstrap primary master and addon deployer come from the inventory
+# groups.
+k8s_bootstrap_host: "{{ groups['homelab_k8s_masters'] | first }}"
+k8s_addons_host: "{{ groups['homelab_k8s_controllers'] | first }}"
+
+# CNI selection: 'cilium' or 'calico'
+k8s_cni: "cilium"
+
+# CSI selection: 'longhorn' or 'none'
+k8s_csi: "longhorn"
+
+# GUI exposure via NodePort (ports must match haproxy backends in
+# group_vars/homelab_haproxy/vars_haproxy.yml)
+k8s_longhorn_ui_service_type: "NodePort"
+k8s_longhorn_ui_nodeport: 30800
+k8s_cilium_hubble_ui_enabled: true
+k8s_cilium_hubble_ui_service_type: "NodePort"
+k8s_cilium_hubble_ui_nodeport: 31235
+
+# Monitoring addons: kube-state-metrics is scraped by Prometheus through
+# the API server proxy; Headlamp is fronted by the headlamp backend.
+# NodePorts must match the haproxy backends.
+k8s_kubestatemetrics_nodeport: 30801
+k8s_headlamp_nodeport: 31236
+
+# MetalLB for bare-metal LoadBalancer services
+k8s_metallb_enabled: true
+k8s_metallb_pool_name: "homelab-k8s-pool"
+k8s_metallb_pool_range: "192.168.1.230-192.168.1.235"

@@ -1,0 +1,8 @@
+---
+# EXAMPLE SECRET VALUES — replace with real ones, then encrypt:
+#   ansible-vault encrypt inventories/homelab/group_vars/homelab_ca/vault_pki.yml
+#
+# Generate with: openssl rand -base64 24
+
+vault_step_ca_intermediate_password: "changeme"
+vault_step_ca_provisioner_password: "changeme"

@@ -1,0 +1,32 @@
+---
+# Certificates to request on the HAProxy load balancer.
+# One certificate per service hostname.
+
+certificate_certs:
+  - name: prometheus
+    common_name: "prometheus.homelab.example.com"
+    duration: "8760h"
+
+  - name: alertmanager
+    common_name: "alertmanager.homelab.example.com"
+    duration: "8760h"
+
+  - name: grafana
+    common_name: "grafana.homelab.example.com"
+    duration: "8760h"
+
+  - name: longhorn
+    common_name: "longhorn.homelab.example.com"
+    duration: "8760h"
+
+  - name: hubble
+    common_name: "hubble.homelab.example.com"
+    duration: "8760h"
+
+  - name: headlamp
+    common_name: "headlamp.homelab.example.com"
+    duration: "8760h"
+
+  - name: git
+    common_name: "git.homelab.example.com"
+    duration: "8760h"

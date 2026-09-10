@@ -1,0 +1,5 @@
+---
+homelab_haproxy:
+  hosts:
+    homelab-haproxy-1:
+      ansible_host: 192.168.1.40

@@ -1,0 +1,34 @@
+---
+# Backup configuration for the homelab PostgreSQL cluster
+# pgBackRest -> S3-compatible object storage, PITR via continuous WAL
+# archiving
+
+postgresql_backup_enabled: true
+
+postgresql_backup_stanza: main
+
+# Example object storage endpoint (S3-compatible)
+postgresql_backup_s3_bucket: homelab-bck
+postgresql_backup_s3_endpoint: s3.example.com
+postgresql_backup_s3_region: us-example-1
+postgresql_backup_s3_prefix: /pgbackrest
+
+# Credentials and repository encryption (vault_backup.yml)
+postgresql_backup_s3_key: "{{ vault_postgresql_backup_s3_key }}"
+postgresql_backup_s3_key_secret: "{{ vault_postgresql_backup_s3_key_secret }}"
+postgresql_backup_cipher_enabled: true
+postgresql_backup_cipher_pass: "{{ vault_postgresql_backup_cipher_pass }}"
+
+# Backup policy: weekly full + daily diff, keep 4 fulls (~1 month PITR window)
+postgresql_backup_retention_full: 4
+postgresql_backup_full_calendar: "Sun *-*-* 01:00:00"
+postgresql_backup_diff_calendar: "Mon..Sat *-*-* 01:00:00"
+
+# Backup job metrics are pushed to every pushgateway on the Prometheus
+# hosts (scraped by Prometheus as job pushgateway; see
+# homelab_prom/vars_scrape.yml).
+postgresql_backup_pushgateway_urls: >-
+  {{
+    groups['homelab_prom'] | map('extract', hostvars) | map(attribute='ansible_host')
+    | map('regex_replace', '^', 'http://') | map('regex_replace', '$', ':9091')
+  }}

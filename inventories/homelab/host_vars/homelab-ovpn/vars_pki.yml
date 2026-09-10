@@ -1,0 +1,15 @@
+---
+# PKI access for the OpenVPN server
+
+# CA secret (vault_pki.yml)
+step_ca_intermediate_password: "{{ vault_step_ca_intermediate_password }}"
+
+# The cold vault serves the CA material on its private interface
+openvpn_pki_host: "192.168.1.253"
+openvpn_pki_user: "admin"
+openvpn_pki_ssh_key: "~/.ssh/homelab_key"
+openvpn_pki_ca_path: "/srv/cold-vault"
+
+# Controller directory where client certs/keys/.ovpn files are generated
+# (collection ships no default path)
+openvpn_client_config_dir: "{{ inventory_dir | dirname }}/files/openvpn"

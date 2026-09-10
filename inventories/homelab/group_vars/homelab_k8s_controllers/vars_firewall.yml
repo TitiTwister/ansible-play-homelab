@@ -1,0 +1,16 @@
+---
+# Firewall rules for Kubernetes controller/admin VMs.
+# Controllers only need base services, not K8s node ports.
+
+firewall_rules:
+  - service: ssh
+    zone: public
+    state: enabled
+
+  # Prometheus Node Exporter
+  - service: node-exporter
+    zone: public
+    state: enabled
+    short: Node Exporter
+    description: Prometheus Node Exporter
+    port: 9100/tcp

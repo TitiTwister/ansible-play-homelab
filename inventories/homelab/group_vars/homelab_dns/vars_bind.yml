@@ -1,0 +1,103 @@
+---
+# DNS server variables for the homelab site.
+# These override the generic defaults in the bind role.
+
+# Zone configuration
+bind_zone_name: "homelab.example.com"
+bind_soa_email: "admin.homelab.example.com"
+bind_soa_serial: 2026091001
+
+# Primary/Secondary
+bind_primary_ns: "homelab-ns-1"
+bind_secondary_ns: "homelab-ns-2"
+bind_primary_ip: "192.168.1.10"
+bind_secondary_ip: "192.168.1.11"
+
+# ACL - networks allowed to query and recurse
+bind_allowed_nets:
+  - "192.168.1.0/24"
+  - "127.0.0.0/8"
+
+# Reverse zones to configure
+bind_reverse_zones:
+  - zone: "1.168.192.in-addr.arpa"
+    network: "192.168.1"
+
+# Host records (A + PTR)
+bind_records:
+  - name: homelab-ovpn
+    ip: 203.0.113.10
+  - name: homelab-wireguard-1
+    ip: 203.0.113.20
+  - name: homelab-cold-vault
+    ip: 203.0.113.30
+
+  - name: homelab-ca-1
+    ip: 192.168.1.5
+
+  - name: homelab-ns-1
+    ip: 192.168.1.10
+  - name: homelab-ns-2
+    ip: 192.168.1.11
+
+  - name: homelab-prom-1
+    ip: 192.168.1.20
+  - name: homelab-prom-2
+    ip: 192.168.1.21
+  - name: homelab-loki-1
+    ip: 192.168.1.23
+  - name: homelab-grafana-1
+    ip: 192.168.1.30
+
+  - name: homelab-haproxy-1
+    ip: 192.168.1.40
+
+  - name: homelab-postgresql-1
+    ip: 192.168.1.50
+  - name: homelab-postgresql-2
+    ip: 192.168.1.51
+  - name: homelab-postgresql-3
+    ip: 192.168.1.52
+
+  - name: homelab-k8s-controller-1
+    ip: 192.168.1.60
+  - name: homelab-k8s-master-1
+    ip: 192.168.1.61
+  - name: homelab-k8s-master-2
+    ip: 192.168.1.62
+  - name: homelab-k8s-master-3
+    ip: 192.168.1.63
+  - name: homelab-k8s-worker-1
+    ip: 192.168.1.70
+  - name: homelab-k8s-worker-2
+    ip: 192.168.1.71
+  - name: homelab-k8s-worker-3
+    ip: 192.168.1.72
+
+  # Service DNS records pointing to HAProxy
+  - name: prometheus
+    ip: 192.168.1.40
+  - name: alertmanager
+    ip: 192.168.1.40
+  - name: grafana
+    ip: 192.168.1.40
+  - name: longhorn
+    ip: 192.168.1.40
+  - name: hubble
+    ip: 192.168.1.40
+  - name: headlamp
+    ip: 192.168.1.40
+  - name: k8s-api
+    ip: 192.168.1.40
+
+  # Forgejo web UI and git SSH (both via HAProxy, see homelab_haproxy).
+  - name: git
+    ip: 192.168.1.40
+
+  # PostgreSQL write endpoint (leader only) via HAProxy
+  - name: postgre-write
+    ip: 192.168.1.40
+
+  # PostgreSQL read endpoint (all healthy nodes) via HAProxy
+  - name: postgre-read
+    ip: 192.168.1.40

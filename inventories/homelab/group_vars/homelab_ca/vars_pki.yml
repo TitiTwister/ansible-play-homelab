@@ -1,0 +1,12 @@
+---
+# Online CA server configuration
+
+step_ca_server_mode: true
+
+# Controller directory holding the CA material fetched from the cold
+# vault (collection ships no default path)
+step_ca_controller_files_dir: "{{ inventory_dir | dirname }}/files/step_ca"
+
+# CA secrets (vault_pki.yml)
+step_ca_intermediate_password: "{{ vault_step_ca_intermediate_password }}"
+step_ca_provisioner_password: "{{ vault_step_ca_provisioner_password }}"

@@ -1,0 +1,16 @@
+---
+# Playbook: cold_vault.yml
+# Purpose: offline PKI bootstrap. Run this ONCE to generate the Root CA +
+# Intermediate CA on the cold vault (homelab-cold-vault), then run
+# playbooks/site.yml: the online CA server (homelab_ca) consumes the
+# intermediate material fetched to files/step_ca/.
+
+- name: Setup cold vault PKI (Root CA + Intermediate CA)
+  hosts: homelab-cold-vault
+  become: true
+  gather_facts: true
+  roles:
+    - role: tititwister.homelab.step_ca
+      tags:
+        - role:step_ca
+        - category:pki

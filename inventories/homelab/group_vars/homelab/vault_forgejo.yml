@@ -1,0 +1,14 @@
+---
+# EXAMPLE SECRET VALUES — replace with real ones, then encrypt:
+#   ansible-vault encrypt inventories/homelab/group_vars/homelab/vault_forgejo.yml
+#
+# Consumed by the k8s role (Forgejo) and the postgresql role (application
+# database/user bootstrap); the CHANGE_ME placeholders keep those features
+# disabled until real values are provided.
+
+vault_forgejo_db_password: "CHANGE_ME_forgejo_db_password"
+vault_forgejo_admin_password: "CHANGE_ME_forgejo_admin_password"
+
+# 40-character hexadecimal secret shared between Forgejo and its Actions
+# runner; generate with: openssl rand -hex 20
+vault_forgejo_runner_secret: "0123456789abcdef0123456789abcdef01234567"

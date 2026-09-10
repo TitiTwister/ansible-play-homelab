@@ -1,0 +1,112 @@
+---
+# HAProxy frontend/backend configuration for the homelab example site.
+# Each item defines a hostname-based route and the backend group/port to
+# serve it.
+
+haproxy_backends:
+  - name: prometheus
+    hostname: "prometheus.homelab.example.com"
+    group: homelab_prom
+    port: 9090
+    healthcheck: "GET /-/healthy"
+    default: false
+
+  - name: alertmanager
+    hostname: "alertmanager.homelab.example.com"
+    group: homelab_prom
+    port: 9093
+    healthcheck: "GET /-/healthy"
+    default: false
+
+  - name: grafana
+    hostname: "grafana.homelab.example.com"
+    group: homelab_grafana
+    port: 3000
+    healthcheck: "GET /api/health"
+    default: true
+
+  - name: longhorn
+    hostname: "longhorn.homelab.example.com"
+    group: homelab_k8s_workers
+    port: 30800
+    healthcheck: "GET /"
+    default: false
+
+  - name: hubble
+    hostname: "hubble.homelab.example.com"
+    group: homelab_k8s_workers
+    port: 31235
+    healthcheck: "GET /"
+    default: false
+
+  # Headlamp k8s web UI (NodePort on the workers, see homelab_k8s).
+  - name: headlamp
+    hostname: "headlamp.homelab.example.com"
+    group: homelab_k8s_workers
+    port: 31236
+    healthcheck: "GET /"
+    default: false
+
+  # Forgejo web UI: the backend is the shared MetalLB LoadBalancer IP
+  # (held by the forgejo-http service on the k8s nodes).
+  - name: git
+    hostname: "git.homelab.example.com"
+    servers:
+      - 192.168.1.230
+    port: 80
+    healthcheck: "GET /api/healthz"
+    default: false
+
+haproxy_tcp_backends:
+  - name: k8s_api
+    frontend:
+      bind: "*:6443"
+      mode: tcp
+    backend:
+      mode: tcp
+      balance: roundrobin
+      servers_group: homelab_k8s_masters
+      port: 6443
+
+  - name: postgre_write
+    frontend:
+      bind: "*:5432"
+      mode: tcp
+    backend:
+      mode: tcp
+      balance: roundrobin
+      httpchk: true
+      httpchk_uri: /leader
+      httpchk_expect_status: 200
+      check_port: 8008
+      servers_group: homelab_postgresql
+      port: 5432
+
+  - name: postgre_read
+    frontend:
+      bind: "*:5433"
+      mode: tcp
+    backend:
+      mode: tcp
+      balance: roundrobin
+      httpchk: true
+      httpchk_uri: /health
+      httpchk_expect_status: 200
+      check_port: 8008
+      servers_group: homelab_postgresql
+      port: 5432
+
+  # Forgejo git SSH: TCP pass-through to the shared MetalLB LoadBalancer
+  # IP. Long-lived sessions: global defaults (50s) would kill clones while
+  # the server is generating a pack.
+  - name: git_ssh
+    frontend:
+      bind: "*:2222"
+      mode: tcp
+      timeout_client: 2h
+    backend:
+      mode: tcp
+      servers:
+        - 192.168.1.230
+      port: 22
+      timeout_server: 2h

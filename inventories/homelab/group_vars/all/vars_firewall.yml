@@ -1,0 +1,13 @@
+---
+# Firewall rules applied to all hosts by the firewall role.
+# Function groups override this list in their own vars_firewall.yml.
+
+firewall_rules:
+  - service: ssh
+    zone: public
+  - service: node-exporter
+    zone: public
+    state: enabled
+    short: Node Exporter
+    description: Prometheus Node Exporter
+    port: 9100/tcp

@@ -1,0 +1,14 @@
+---
+# Firewall rules for the online CA server
+
+firewall_rules:
+  - service: ssh
+    zone: public
+  - service: node-exporter
+    zone: public
+    state: enabled
+    short: Node Exporter
+    description: Prometheus Node Exporter
+    port: 9100/tcp
+  - port: 443/tcp
+    zone: public

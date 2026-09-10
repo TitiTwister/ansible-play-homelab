@@ -1,0 +1,21 @@
+---
+# Firewall rules for the Loki host
+
+firewall_rules:
+  - service: ssh
+    zone: public
+  - service: node-exporter
+    zone: public
+    state: enabled
+    short: Node Exporter
+    description: Prometheus Node Exporter
+    port: 9100/tcp
+
+  # Loki HTTP API: journald pushes from every host (incl. the DMZ OpenVPN
+  # gateway) and Grafana queries
+  - service: loki
+    zone: public
+    state: enabled
+    short: Loki
+    description: Loki log aggregation API
+    port: 3100/tcp

@@ -1,0 +1,5 @@
+---
+# Where promtail ships journald entries (the Loki push API).
+# Lives in group_vars/all because promtail also runs on homelab-ovpn
+# (homelab_dmz), which is not part of the homelab group.
+promtail_loki_push_url: "http://{{ hostvars[groups['homelab_loki'] | first].ansible_host }}:3100/loki/api/v1/push"
