@@ -14,6 +14,11 @@ firewall_rules:
     zone: public
   - source: "10.8.0.0/24"
     zone: public
+  # WireGuard (dual VPN gateway on homelab-ovpn)
+  - port: "51820/udp"
+    zone: public
+  - source: "10.9.0.0/24"
+    zone: public
   - masquerade: true
     zone: public
 

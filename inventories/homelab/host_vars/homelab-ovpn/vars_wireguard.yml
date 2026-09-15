@@ -1,0 +1,19 @@
+---
+# WireGuard server configuration for the homelab-ovpn DMZ gateway.
+# The gateway runs both VPN servers: OpenVPN (TCP 1194, 10.8.0.0/24)
+# and WireGuard (UDP 51820, 10.9.0.0/24).
+
+wireguard_clients:
+  - example-laptop
+  - example-phone
+
+# Distinct pool from OpenVPN (the DMZ firewall allows that source
+# subnet, see homelab_dmz/vars_firewall.yml); server takes .1
+wireguard_server_address: "10.9.0.1/24"
+
+# WireGuard server IP used by client configs
+wireguard_server_public_ip: "203.0.113.10"
+
+# Controller directory where client .conf files are generated
+# (collection ships no default path)
+wireguard_client_config_dir: "{{ inventory_dir | dirname }}/files/wireguard"

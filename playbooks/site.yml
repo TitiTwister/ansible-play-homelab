@@ -3,7 +3,8 @@
 # Purpose: full stack for the homelab example site — base configuration
 # and node_exporter everywhere, DNS, PKI, HAProxy, the monitoring stack
 # (Prometheus/Alertmanager/Pushgateway, Loki, Promtail, Grafana), a
-# PostgreSQL HA cluster and a Kubernetes cluster.
+# PostgreSQL HA cluster, a Kubernetes cluster, and the dual OpenVPN/
+# WireGuard DMZ gateway.
 
 ##############################################################
 ################  SYSTEM & NETWORK            ################
@@ -40,6 +41,23 @@
     - role: tititwister.homelab.bind
       tags:
         - role:bind
+        - category:network
+
+- name: Setup VPN servers
+  # homelab-ovpn runs both OpenVPN (TCP 1194) and WireGuard (UDP 51820)
+  # on distinct subnets. The firewall play above has already opened both
+  # ports and bound the VPN subnets before the roles run.
+  hosts: homelab-ovpn
+  become: true
+  gather_facts: true
+  roles:
+    - role: tititwister.homelab.openvpn
+      tags:
+        - role:openvpn
+        - category:network
+    - role: tititwister.homelab.wireguard
+      tags:
+        - role:wireguard
         - category:network
 
 ##############################################################

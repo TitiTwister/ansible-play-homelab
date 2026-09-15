@@ -6,7 +6,8 @@ collection. It deploys a full homelab stack on a fictional `homelab` site:
 base configuration + node_exporter everywhere, BIND DNS, a step-ca PKI,
 HAProxy, Prometheus/Alertmanager/Pushgateway, Loki + Promtail, Grafana, a
 PostgreSQL HA cluster (Patroni/etcd), a Kubernetes cluster (kubeadm) with
-Forgejo, and an OpenVPN DMZ gateway with an offline root CA cold vault.
+Forgejo, and a dual OpenVPN/WireGuard DMZ gateway with an offline root CA
+cold vault.
 
 All names are placeholders (`homelab` site, `homelab.example.com` domain,
 `192.168.1.x` addresses, `203.0.113.x` DMZ addresses, `changeme` secrets) —
@@ -32,13 +33,13 @@ inventories/homelab/              # one directory per site
 │   ├── homelab/                  # site-wide: vault_forgejo
 │   └── <group>/                  # per function: vars_*.yml + vault_*.yml
 └── host_vars/
-    ├── homelab-ovpn/             # openvpn + pki vars
+    ├── homelab-ovpn/             # openvpn + wireguard + pki vars
     └── homelab-cold-vault/       # offline root CA pki vars
 playbooks/site.yml                # plays mapping function groups to roles
-playbooks/ovpn_setup.yml          # one-shot OpenVPN gateway bootstrap
 playbooks/cold_vault.yml          # one-shot offline Root CA generation
 files/grafana/dashboards/         # controller-side dashboard JSONs
-files/step_ca/, files/k8s/        # generated at runtime (gitignored or absent)
+files/step_ca/, files/openvpn/, files/wireguard/, files/k8s/
+                                   # generated at runtime (gitignored or absent)
 ```
 
 Roles are referenced by FQCN (`tititwister.homelab.prometheus`) and pinned to a
@@ -56,7 +57,6 @@ python3 -m venv .venv
 
 ```bash
 .venv/bin/ansible-playbook playbooks/cold_vault.yml   # once: offline Root CA
-.venv/bin/ansible-playbook playbooks/ovpn_setup.yml   # once: OpenVPN gateway
 .venv/bin/ansible-playbook playbooks/site.yml
 .venv/bin/ansible-playbook playbooks/site.yml --tags role:prometheus
 ```
